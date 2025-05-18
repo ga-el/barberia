@@ -1,0 +1,32 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { collection, getDocs, db } from '../../firabase';
+
+if (!Astro.cookies.get('auth')) {
+  return Astro.redirect('/login');
+}
+
+let citas: any[] = [];
+try {
+  const querySnapshot = await getDocs(collection(db, 'citas'));
+  citas = querySnapshot.docs.map(doc => doc.data());
+} catch (error) {
+  console.error(error);
+}
+---
+
+<Layout title="Panel Admin | Barbería The Cut">
+  <h2>Citas Pendientes</h2>
+  {citas.length === 0 ? (
+    <p>No hay citas pendientes.</p>
+  ) : (
+    <ul>
+      {citas.map(c => (
+        <li class="card">
+          <strong>{c.nombre}</strong> - {c.telefono} <br/>
+          Paquete: {c.paquete}, Fecha: {c.fecha} a las {c.hora}
+        </li>
+      ))}
+    </ul>
+  )}
+</Layout>

@@ -1,5 +1,4 @@
 ---
-// Simulación de base de datos local
 const usuarios = [
   {
     correo: "admin",
@@ -14,18 +13,16 @@ if (Astro.request.method === 'POST') {
   const correo = data.get('correo');
   const contraseña = data.get('contraseña');
 
-  // Buscar usuario
   const usuario = usuarios.find(u => u.correo === correo && u.contraseña === contraseña);
 
   if (usuario) {
-    // Iniciar sesión con cookie
     Astro.cookies.set('auth', 'true', {
       path: '/',
-      maxAge: 60 * 60, // 1 hora
+      maxAge: 60 * 60,
     });
     return Astro.redirect('/admin');
   } else {
-    mensaje = 'Credenciales incorrectas';
+    mensaje = 'El usuario o la contraseña no son correctos. Intenta de nuevo.';
   }
 }
 ---
@@ -146,7 +143,7 @@ if (Astro.request.method === 'POST') {
 <body>
   <div class="login-container">
     <h2>Iniciar Sesión</h2>
-    {mensaje ? `<p class="error">${mensaje}</p>` : ''}
+    {mensaje && <p class="error">{mensaje}</p>}
     <form method="post">
       <input type="text" name="correo" placeholder="Nombre de usuario" required autocomplete="username" />
       <input type="password" name="contraseña" placeholder="Contraseña" required autocomplete="current-password" />

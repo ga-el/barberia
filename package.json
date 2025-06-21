@@ -6,9 +6,11 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "init-barberos": "node src/scripts/initBarberos.js"
   },
   "dependencies": {
-    "astro": "^5.7.13"
+    "astro": "^5.7.13",
+    "firebase": "^10.8.0"
   }
 }

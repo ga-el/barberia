@@ -2,14 +2,21 @@
 import Layout from '../../layouts/Layout.astro';
 import { collection, getDocs, db } from '../../firabase';
 
-const url = new URL(Astro.request.url);
-const filtro = url.searchParams.get('barbero') || 'general';
-
+// Check authentication and admin status
 if (!Astro.cookies.get('auth')) {
   return Astro.redirect('/login');
 }
 
+const userType = Astro.cookies.get('userType')?.value;
+if (userType !== 'admin') {
+  return Astro.redirect('/login');
+}
+
+const url = new URL(Astro.request.url);
+const filtro = url.searchParams.get('barbero') || 'general';
+
 interface Cita {
+  id: string;
   nombre: string;
   telefono: string;
   paquete: string;
@@ -18,23 +25,50 @@ interface Cita {
   barbero: string;
 }
 
-let citas: Cita[] = [];
-const barberos = ['Barbero 1', 'Barbero 2', 'Barbero 3'];
-
-try {
-  const querySnapshot = await getDocs(collection(db, 'citas'));
-  citas = querySnapshot.docs.map((doc: any) => doc.data() as Cita);
-} catch (error) {
-  console.error(error);
+interface Barbero {
+  id: string;
+  nombre: string;
+  especialidad: string;
+  experiencia: string;
 }
 
-let citasFiltradas: Cita[] = citas;
+let citas: Cita[] = [];
+let barberos: Barbero[] = [];
+
+try {
+  // Get all barbers
+  const barberosSnapshot = await getDocs(collection(db, 'barberos'));
+  barberos = barberosSnapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  })) as Barbero[];
+
+  // Get all appointments
+  const citasSnapshot = await getDocs(collection(db, 'citas'));
+  citas = citasSnapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  })) as Cita[];
+} catch (error) {
+  console.error('Error fetching data:', error);
+}
+
+// Filtrar solo citas pendientes (futuras o de hoy)
+const hoy = new Date();
+hoy.setHours(0, 0, 0, 0);
+let citasPendientes: Cita[] = citas.filter((cita) => {
+  // cita.fecha formato: "YYYY-MM-DD"
+  const fechaCita = new Date(cita.fecha + 'T00:00:00');
+  return fechaCita >= hoy;
+});
+
+let citasFiltradas: Cita[] = citasPendientes;
 if (filtro !== 'general') {
-  citasFiltradas = citas.filter((cita: Cita) => cita.barbero === filtro);
+  citasFiltradas = citasPendientes.filter((cita: Cita) => cita.barbero === filtro);
 }
 ---
 
-<Layout title="Panel Admin | Barbería The Cut">
+<Layout title="Panel Admin | Gentleman's Barber">
   <style is:global>
     :root {
       --primary-color: #1a1a1a;
@@ -50,7 +84,6 @@ if (filtro !== 'general') {
       background: var(--primary-color);
       color: var(--text-color);
       font-family: 'Playfair Display', serif;
-      animation: none;
     }
     .sidebar {
       background: var(--secondary-color);
@@ -66,7 +99,6 @@ if (filtro !== 'general') {
       flex-direction: column;
       gap: 1.2rem;
       z-index: 10;
-      animation: fadeInLeft 1s;
     }
     .sidebar h3 {
       color: var(--accent-color);
@@ -74,7 +106,6 @@ if (filtro !== 'general') {
       font-size: 1.2rem;
       font-weight: bold;
       letter-spacing: 0.5px;
-      text-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
     .sidebar a {
       color: var(--text-color);
@@ -86,8 +117,6 @@ if (filtro !== 'general') {
       font-size: 1rem;
       margin-bottom: 0.4rem;
       border-left: 4px solid transparent;
-      font-weight: 500;
-      box-shadow: 0 2px 8px rgba(200, 169, 126, 0.04);
     }
     .sidebar a:hover,
     .sidebar a.active {
@@ -95,15 +124,11 @@ if (filtro !== 'general') {
       color: var(--primary-color);
       border-left-color: var(--accent-color);
       transform: scale(1.04);
-      box-shadow: 0 6px 16px rgba(200, 169, 126, 0.18);
     }
     .main-content {
       flex: 1;
       padding: 2.5rem 2rem;
       background: var(--primary-color);
-      animation: none;
-      display: flex;
-      flex-direction: column;
     }
     .main-content h2 {
       color: var(--accent-color);
@@ -111,13 +136,6 @@ if (filtro !== 'general') {
       margin-bottom: 2rem;
       font-weight: bold;
       letter-spacing: 1px;
-      text-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      animation: fadeIn 1.2s;
-    }
-    ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
     }
     .card {
       background: var(--secondary-color);
@@ -129,33 +147,11 @@ if (filtro !== 'general') {
       font-size: 1.08rem;
       color: var(--text-color);
       transition: transform 0.2s, box-shadow 0.2s;
-      font-family: 'Playfair Display', serif;
-      opacity: 0;
-      transform: translateY(30px);
-      animation: none;
-      animation-fill-mode: forwards;
-    }
-    .card.visible {
-      opacity: 1;
-      transform: translateY(0);
-      transition: opacity 0.4s, transform 0.4s;
     }
     .card strong {
       color: var(--accent-color);
       font-weight: 700;
       font-size: 1.1rem;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes fadeInLeft {
-      from { opacity: 0; transform: translateX(-40px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(40px); }
-      to { opacity: 1; transform: translateY(0); }
     }
     @media (max-width: 800px) {
       .dashboard-container {
@@ -171,7 +167,6 @@ if (filtro !== 'general') {
         padding: 1rem 0.5rem;
         min-width: 0;
         max-width: 100vw;
-        box-shadow: none;
       }
       .sidebar h3 {
         display: none;
@@ -186,41 +181,33 @@ if (filtro !== 'general') {
       }
     }
   </style>
+
   <div class="dashboard-container">
     <nav class="sidebar">
       <h3>Filtrar por barbero</h3>
       <a href="/admin" class={filtro === 'general' ? 'active' : ''}>General</a>
       {barberos.map(b => (
-        <a href={`/admin?barbero=${encodeURIComponent(b)}`} class={filtro === b ? 'active' : ''}>
-          {b}
+        <a href={`/admin?barbero=${encodeURIComponent(b.id)}`} class={filtro === b.id ? 'active' : ''}>
+          {b.nombre}
         </a>
       ))}
     </nav>
     <main class="main-content">
-      <h2>Citas {filtro === 'general' ? 'Pendientes' : `de ${filtro}`}</h2>
+      <h2>Citas {filtro === 'general' ? 'Pendientes' : `de ${barberos.find(b => b.id === filtro)?.nombre || 'Barbero'}`}</h2>
       {citasFiltradas.length === 0 ? (
         <p>No hay citas pendientes.</p>
       ) : (
-        <ul>
-          {citasFiltradas.map((cita: Cita, i: number) => (
-            <li class="card animate-on-scroll" style={{animationDelay: `${0.1 + i * 0.1}s`}}>
+        <div>
+          {citasFiltradas.map((cita: Cita) => (
+            <div class="card">
               <strong>{cita.nombre}</strong> - {cita.telefono}<br />
-              Paquete: {cita.paquete}, Fecha: {cita.fecha} a las {cita.hora}<br />
-              Barbero: {cita.barbero}
-            </li>
+              Paquete: {cita.paquete}<br />
+              Fecha: {cita.fecha} a las {cita.hora}<br />
+              Barbero: {barberos.find(b => b.id === cita.barbero)?.nombre || 'No asignado'}
+            </div>
           ))}
-        </ul>
+        </div>
       )}
     </main>
   </div>
-  <script>
-    // Animación de aparición para las tarjetas
-    document.addEventListener('DOMContentLoaded', () => {
-      document.querySelectorAll('.card').forEach((el, i) => {
-        setTimeout(() => {
-          el.classList.add('visible');
-        }, 200 + i * 100);
-      });
-    });
-  </script>
 </Layout>

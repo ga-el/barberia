@@ -1,7 +1,6 @@
 ---
 // Datos estáticos simulando base de datos local
 
-
 const paquetes = [
   {
     nombre: "Corte Estándar",
@@ -675,7 +674,7 @@ const barberos = [
       <div class="about-content animate-on-scroll">
         <div class="about-img">
           <img
-            src="https://picsum.photos/600/400 "
+            src="https://picsum.photos/600/400  "
             alt="Interior de la barbería"
           />
         </div>
@@ -829,11 +828,8 @@ const barberos = [
 
           <button type="submit" class="btn">Confirmar Cita</button>
         </form>
-        
       </div>
     </section>
-
- 
 
     <!-- Footer -->
     <footer>
@@ -910,12 +906,24 @@ const barberos = [
         appointmentForm.addEventListener("submit", async function (e) {
           e.preventDefault();
 
-          const fullnameInput = document.getElementById("fullname") as HTMLInputElement;
-          const phoneInput = document.getElementById("phone") as HTMLInputElement;
-          const serviceSelect = document.getElementById("service") as HTMLSelectElement;
-          const barberoSelect = document.getElementById("barbero") as HTMLSelectElement;
-          const selectedDateInput = document.getElementById("selectedDate") as HTMLInputElement;
-          const selectedTimeInput = document.getElementById("selectedTime") as HTMLInputElement;
+          const fullnameInput = document.getElementById(
+            "fullname"
+          ) as HTMLInputElement;
+          const phoneInput = document.getElementById(
+            "phone"
+          ) as HTMLInputElement;
+          const serviceSelect = document.getElementById(
+            "service"
+          ) as HTMLSelectElement;
+          const barberoSelect = document.getElementById(
+            "barbero"
+          ) as HTMLSelectElement;
+          const selectedDateInput = document.getElementById(
+            "selectedDate"
+          ) as HTMLInputElement;
+          const selectedTimeInput = document.getElementById(
+            "selectedTime"
+          ) as HTMLInputElement;
 
           if (
             !fullnameInput ||

@@ -1,8 +1,7 @@
 export const prerender = false;
 
 // Asegúrate de que db esté correctamente importado desde tu firabase.js
-import { collection, addDoc, getFirestore, Timestamp } from "../../firabase";
-import { db } from "../../firabase";
+import { db, collection, addDoc, Timestamp } from "../../firabase";
 
 export async function POST({ request }) {
   const data = await request.json();

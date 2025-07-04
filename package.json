@@ -7,9 +7,13 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "init-barberos": "node src/scripts/initBarberos.js"
+    "init-barberos": "node src/scripts/initBarberos.js",
+    "start": "astro dev",
+    "deploy": "npm run build && netlify deploy --prod --dir=dist"
   },
   "dependencies": {
+    "@astrojs/netlify": "^6.4.1",
+    "@astrojs/node": "^9.3.0",
     "astro": "^5.7.13",
     "firebase": "^10.8.0"
   }
